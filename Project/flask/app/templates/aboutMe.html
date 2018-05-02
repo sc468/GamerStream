@@ -1,0 +1,48 @@
+{% extends "mybase.html" %} <!--this means that you are extending the base tempate -->
+{% block main %} <!-- this is the name of the block below -->
+
+ <h1>Accident Alert</h1>
+ <h3>First 5 users:</h3>
+
+<table>
+  <tr>
+    <th>User ID</th>
+    <th>Status</th> 
+  </tr>
+  <tr>
+    <td>0</td>
+    <td id="userid_0" style="background-color:#82E0AA;">safe</td> 
+  </tr>
+  <tr>
+    <td>1</td>
+    <td id="userid_1" style="background-color:#82E0AA;">safe</td> 
+  </tr>
+  <tr>
+    <td>2</td>
+    <td id="userid_2" style="background-color:#82E0AA;">safe</td> 
+  </tr>
+  <tr>
+    <td>3</td>
+    <td id="userid_3" style="background-color:#82E0AA;">safe</td> 
+  </tr>
+  <tr>
+    <td>4</td>
+    <td id="userid_4" style="background-color:#82E0AA;">safe</td> 
+  </tr>
+</table>
+<p></p>
+
+<p style="font-size:16px;">
+      user ID (0~199):<input type="text" size="5" name="a">
+      Number of Points:<input type="text" size="5" name="b"> 
+</p>
+<p>
+<button class="button button5" href=# id="calculate">Plot trace</button>
+</p>
+
+<!-- Plotly chart will be drawn inside this DIV -->
+<div id="chart1"></div>
+
+{% endblock %}
+
+

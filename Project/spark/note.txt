@@ -1,0 +1,16 @@
+Even though python3 is installed, by default spark use python2. To use Python3, add following to /usr/local/spark/conf/spark-env.sh
+
+export PYSPARK_PYTHON=/home/ubuntu/anaconda3/bin/python3
+export PYSPARK_DRIVER_PYTHON=/home/ubuntu/anaconda3/bin/ipython
+
+In python3, the hash is random which will create a mess in partitioning the jobs in spark. To solve it, we need to set the PYTHONHASHSEED to fix the issue.
+To use spark with python3, add following to /usr/local/spark/conf/spark-defaults.conf
+
+spark.executorEnv.PYTHONHASHSEED   323
+
+To use multiple nodes, use the spark-submit command in the spark folder, not the one in anaconda. For example:
+
+/usr/local/spark/bin/spark-submit --master spark://<master-hostname>:7077 --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.0.2 streaming.py
+
+
+
