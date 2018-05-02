@@ -169,6 +169,12 @@ def sendCassandra(iter):
     session.execute(batch)
     session.shutdown()
 
+def mapFunction1(v):
+    if v is None or v[1][2] is None or v[1][4] is None:
+        return (None, None)
+    else:
+        return(int(v[1].split(',')[2]),int(v[1].split(',')[4]) )
+ 
 
 ###################################################
 ##                     Main                      ## 
@@ -192,9 +198,11 @@ def main():
  #                  .union(data_ds).pprint()
     
     # Transform player name into key
-    line = kafkaStream.map(lambda v: (int(v[1].split(',')[0]),int(v[1].split(',')[1]) )) \
-		.reduceByKey(add)
-   # line = kafkaStream.map(lambda v: v)
+    line = kafkaStream.map(mapFunction1) \
+                .reduceByKey(add)
+###    line = kafkaStream.map(lambda v: (int(v[1].split(',')[0]),int(v[1].split(',')[0]) )) \
+###		.reduceByKey(add)
+#    line = kafkaStream.map(lambda v: v)
     line.pprint()
    
     # use the window function to group the data by window
