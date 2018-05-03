@@ -169,12 +169,11 @@ def sendCassandra(iter):
     session.execute(batch)
     session.shutdown()
 
-def mapFunction1(v):
+def extractKillerVictim(v):
     if v is None or v[1][2] is None or v[1][4] is None:
         return (None, None)
     else:
         return(int(v[1].split(',')[2]),int(v[1].split(',')[4]) )
- 
 
 ###################################################
 ##                     Main                      ## 
@@ -186,7 +185,7 @@ def main():
     sc.setLogLevel("WARN")
     
     # set microbatch interval seconds
-    ssc = StreamingContext(sc, 20)
+    ssc = StreamingContext(sc, 2)
   #  ssc.checkpoint(config.CHECKPOINT_DIR)
     
     # create a direct stream from kafka without using receiver
@@ -198,12 +197,14 @@ def main():
  #                  .union(data_ds).pprint()
     
     # Transform player name into key
-    line = kafkaStream.map(mapFunction1) \
+    line = kafkaStream.map(extractKillerVictim)  \
+    ###            .reduceByKey(add)
+    killer = line.map(lambda v: (v[0],1)) \
                 .reduceByKey(add)
 ###    line = kafkaStream.map(lambda v: (int(v[1].split(',')[0]),int(v[1].split(',')[0]) )) \
 ###		.reduceByKey(add)
 #    line = kafkaStream.map(lambda v: v)
-    line.pprint()
+    killer.pprint()
    
     # use the window function to group the data by window
     #dataWindow_ds = data_ds.map(lambda x: (x['userid'], (x['acc'], x['time']))).window(10,10)

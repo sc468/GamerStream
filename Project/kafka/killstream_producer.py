@@ -24,18 +24,25 @@ import sys
 import datetime
 import numpy as np
 from kafka import KafkaProducer
-from time import sleep
+import time
 
 
 def main():
     
     producer = KafkaProducer(bootstrap_servers = "localhost:9092")
-    
+
+    #Variables to control kafka producer speed    
+    batchSize = 100
+    waitTime = 1 
+    count = 0
+
     with open('KillStream.txt', 'r') as KillStream:
         for line in KillStream:
             #print ('Printing line:', line)
+            count += 1
             producer.send('data', line.encode('utf-8'))
-    
+            if (count%batchSize ==0):
+                time.sleep(waitTime)
     
     # block until all async messages are sent
     producer.flush()
