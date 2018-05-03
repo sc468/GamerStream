@@ -118,29 +118,6 @@ def getStatusList(rdd):
     complete_df = spark.createDataFrame(rowRdd)
     complete_df.show()
 
-    # get the dataframe with status 'danger'
- #   danger_df = complete_df.filter(complete_df.status == 'danger')
-
-    # get the latest 'danger' record for each user
- #   danger_window = Window.partitionBy(danger_df['userid'])\
-  #                        .orderBy(danger_df['time'].desc())
-  #  dangerLatest_df = danger_df.select('*', rank().over(danger_window).alias('rank')) \
-   #                            .filter(col('rank') <= 1) 
-
-    # get the complete list of user ID in this rdd
- #   completeID_list = [row.userid for row in complete_df.select('userid').distinct().collect()]
-    # get the list of danger and safe user ID in this rdd
-   # dangerID_list   = [row.userid for row in dangerLatest_df.select('userid').distinct().collect()]
-   # safeID_list = list(set(completeID_list) - set(dangerID_list))
-  
-    # get the status list of (userid, status, time) tuple from each group (safe and danger)
-    # The timestamps for the safe users are not needed
-    #dangerStatus_list = [(row.userid, row.status, row.time.strftime("%Y-%m-%d %H:%M:%S %f")) for row in dangerLatest_df.collect()]
-    #safeStatus_list = [(ID, 'safe', 'None') for ID in safeID_list]
-    #status_list = dangerStatus_list + safeStatus_list  
-
-    #return status_list
-
 
 def sendCassandra(iter):
     print("send to cassandra")
@@ -148,7 +125,8 @@ def sendCassandra(iter):
     session = cluster.connect()
     session.execute('USE ' + "PlayerKills")
 
-    insert_statement = session.prepare("INSERT INTO data (userid, kills) VALUES (?, ?)")
+    #
+    insert_statement = session.prepare("INSERT INTO data (time, hero, kills) VALUES (?, ?, ?)")
 
     count = 0
 
@@ -156,7 +134,7 @@ def sendCassandra(iter):
     batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
     
     for record in iter:
-        batch.add(insert_statement,( record[0], record[1]))
+        batch.add(insert_statement,( record[1][0], record[0], record[1][1]))
 
 
         # split the batch, so that the batch will not exceed the size limit
@@ -169,11 +147,11 @@ def sendCassandra(iter):
     session.execute(batch)
     session.shutdown()
 
-def extractKillerVictim(v):
-    if v is None or v[1][2] is None or v[1][4] is None:
-        return (None, None)
-    else:
-        return(int(v[1].split(',')[2]),int(v[1].split(',')[4]) )
+def extractKiller(v):
+    try:
+        return(int(v[2]), (int(v[0]), 1))
+    except:
+        return (None, (None, None))
 
 ###################################################
 ##                     Main                      ## 
@@ -191,19 +169,10 @@ def main():
     # create a direct stream from kafka without using receiver
     kafkaStream = KafkaUtils.createDirectStream(ssc, ['data'], {"metadata.broker.list":"localhost:9092"})
     
-    # parse each record string as json
-  #  data_ds = kafkaStream.map(lambda v: json.loads(v[1]))
-  #  data_ds.count().map(lambda x:'Records in this batch: %s' % x)\
- #                  .union(data_ds).pprint()
-    
     # Transform player name into key
-    line = kafkaStream.map(extractKillerVictim)  \
-    ###            .reduceByKey(add)
-    killer = line.map(lambda v: (v[0],1)) \
-                .reduceByKey(add)
-###    line = kafkaStream.map(lambda v: (int(v[1].split(',')[0]),int(v[1].split(',')[0]) )) \
-###		.reduceByKey(add)
-#    line = kafkaStream.map(lambda v: v)
+    killer = kafkaStream.map(lambda v:v[1][1:-2].split(','))\
+                .map(extractKiller)\
+                .reduceByKey(lambda x, y: (x[0], x[1]+y[1]) )
     killer.pprint()
    
     # use the window function to group the data by window
@@ -225,7 +194,7 @@ def main():
     #resultSimple_ds = result_ds.map(lambda x: (x[0], x[1], x[5]))
 
     # Send the status table to rethinkDB and all data to cassandra    
-    line.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))
+    killer.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))
     #resultSimple_ds.foreachRDD(sendRethink)
     
     ssc.start()

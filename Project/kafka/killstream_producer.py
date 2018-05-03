@@ -36,13 +36,18 @@ def main():
     waitTime = 1 
     count = 0
 
-    with open('KillStream.txt', 'r') as KillStream:
+    prevTime =0 
+    with open('SortedKillTimes.txt', 'r') as KillStream:
         for line in KillStream:
             #print ('Printing line:', line)
-            count += 1
-            producer.send('data', line.encode('utf-8'))
-            if (count%batchSize ==0):
+            currentTime = int(line.split(',')[0][1:])
+            if currentTime == prevTime:
+                producer.send('data', line.encode('utf-8'))
+                print (line)
+            else:
+                prevTime = currentTime
                 time.sleep(waitTime)
+                producer.send('data', line.encode('utf-8'))
     
     # block until all async messages are sent
     producer.flush()

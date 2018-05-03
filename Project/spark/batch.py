@@ -23,15 +23,15 @@ import json, math, datetime
 from kafka.consumer import SimpleConsumer
 
 from operator import add
-# rethinkDB
-#import rethinkdb as r
 
+#Place time of kill as key (first element)
+#Afterwards store player_id, player_hero, and victim
 def extractKills(v):
     try:
-        output = (int(v.split(',')[3]), int(v.split(',')[2]), int(v.split(',')[4]))
+        output = (int(v.split(',')[3]), int(v.split(',')[1]),   int(v.split(',')[2]), int(v.split(',')[4]))
         return output
     except:
-        return (None, None, None)
+        return (None, None, None, None)
 
 ###################################################
 ##                     Main                      ## 
@@ -44,6 +44,8 @@ def main():
 
     sortedTime = sc.textFile("s3a://steve-dota2/KillStream.txt")\
         .map(extractKills)\
+        .filter(lambda v: not v[0] is None)\
+        .filter(lambda v: v[0]>=0)\
         .sortBy(lambda v: v[0])
     
     result = sortedTime.collect()  
