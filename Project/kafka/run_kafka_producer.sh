@@ -3,5 +3,5 @@
 #######################################################
 
 
-python3 kafka_producer.py 2000
+python3 killstream_producer.py
 
