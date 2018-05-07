@@ -5,7 +5,7 @@ NumPlayers = int(sys.argv[1])
 
 #NumPlayers = 50000
 pathname ='3-UnsortedKillStream' + str(NumPlayers) + '.txt' 
-#pathname = '/home/ubuntu/PlayerStream/Project/simstream/3-UnsortedKillStream' + str(NumPlayers) + '.txt'
+#pathname = '/home/ubuntu/GamerStream/Project/simstream/3-UnsortedKillStream' + str(NumPlayers) + '.txt'
 destname ='3-UnsortedKillStream' + str(NumPlayers) + '.txt' 
 ##################################################
 #  http://boto3.readthedocs.io/en/latest/guide/s3-example-creating-buckets.html
