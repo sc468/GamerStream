@@ -28,8 +28,11 @@ import time
 
 
 def main():
-    
-    producer = KafkaProducer(bootstrap_servers = "localhost:9092")
+    NumPlayers = 100000
+    InputFile = '/home/ubuntu/PlayerStream/Project/simstream/4-SortedKillStream' + str(NumPlayers) + '.txt'
+    KafkaProducerServers = "localhost:9092"
+
+    producer = KafkaProducer(bootstrap_servers = KafkaProducerServers)
 
     #Variables to control kafka producer speed    
     batchSize = 100
@@ -37,7 +40,8 @@ def main():
     count = 0
 
     prevTime =0 
-    with open('SortedKillTimes.txt', 'r') as KillStream:
+#    with open('SortedKillTimes.txt', 'r') as KillStream:
+    with open(InputFile, 'r') as KillStream:
         for line in KillStream:
             #print ('Printing line:', line)
             currentTime = int(line.split(',')[0][1:])
