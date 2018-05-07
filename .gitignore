@@ -1,0 +1,8 @@
+#Ignore large data files
+**/simstream/2-CleanedData*
+**/simstream/3-UnsortedKillStream*
+**/simstream/4-SortedKillStream*
+**/simstream/PlayerMatchData*
+Project/simstream/2-CleanedData500000.txt
+Project/simstream/3-UnsortedKillStream500000.txt
+Project/simstream/PlayerMatchData500MB.txt
