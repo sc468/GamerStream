@@ -166,7 +166,7 @@ def main():
     sc.setLogLevel("WARN")
     
     # set microbatch interval seconds
-    ssc = StreamingContext(sc, 2)
+    ssc = StreamingContext(sc, 0.5)
   #  ssc.checkpoint(config.CHECKPOINT_DIR)
     
     # create a direct stream from kafka without using receiver

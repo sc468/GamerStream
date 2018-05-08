@@ -39,7 +39,7 @@ app.layout = html.Div(
         dcc.Graph(id='live-update-graph'),
         dcc.Interval(
             id='interval-component',
-            interval=2*1000, # in milliseconds
+            interval=1000, # in milliseconds
             n_intervals=0
         )
     ])
@@ -50,20 +50,25 @@ app.layout = html.Div(
               [Input('interval-component', 'n_intervals')])
 def update_graph_live(n):
 
-    maxTimeInTable = 0
     tableToDash = [['kills'], ['time']]
 
     
     #Grab data from Cassandra
     #result = session.execute('SELECT kills, time  FROM killerstats WHERE killerhero = 14 '  )
-    result = session.execute('SELECT SUM(kills), time  FROM killerstats \
-        WHERE killerhero = 14 GROUP BY time LIMIT 20'  )
-    maxTime = result[0][1]
-    print ('Max Time = ', maxTime)
+    window = 20
+    cassandraCommand = 'SELECT SUM(kills), time  FROM killerstats WHERE killerhero = 14 GROUP BY time LIMIT ' + str(window)
+    result = session.execute(cassandraCommand)
+    try:
+        maxTime = result[0][1]
+    except:
+        maxTime = 0
+    dictFromCas = {}
     for row in result:
         print (row)
-        tableToDash[0].append(row.system_sum_kills)
-        tableToDash[1].append(row.time)
+        dictFromCas[row.time] = row.system_sum_kills
+#        tableToDash[0].append(row.system_sum_kills)
+#        tableToDash[1].append(row.time)
+
 #    for row in result:
 #        print (row)
 #        tableToDash[0].append(row.system_sum_kills)
@@ -72,12 +77,13 @@ def update_graph_live(n):
     #print (dictFromCas)
     #Create table to send to plot in Dash
     #Fill in unknown values
-#    tableToDash = [['kills'], ['time']]
-#    for i in range (0, maxTimeInTable):
-#        tableToDash[1].append(i)
-#        if i in dictFromCas:
-#            tableToDash[0].append(dictFromCas[i])
-
+  #  tableToDash = [['kills'], ['time']]
+    for i in range (maxTime-window, maxTime):
+        tableToDash[1].append(i)
+        if i in dictFromCas:
+            tableToDash[0].append(dictFromCas[i])
+        else:
+            tableToDash[0].append(0)
 
     # Create the graph with subplots
     fig = plotly.tools.make_subplots(rows=1, cols=1, vertical_spacing=0.2)
@@ -91,7 +97,7 @@ def update_graph_live(n):
         'x': tableToDash[1],
         'y': tableToDash[0],
         'name': 'Kill Rate of Hero',
-        'type': 'bar'
+        'type': 'line'
     }, 1, 1)
 
     return fig

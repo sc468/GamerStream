@@ -1,6 +1,6 @@
 #!/bin/sh
 
-NUMPLAYERS=10000
+NUMPLAYERS=2000000
 echo $NUMPLAYERS
 
 python3 1-CleanPlayerData.py $NUMPLAYERS
