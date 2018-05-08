@@ -126,19 +126,20 @@ def sendCassandra(iter):
     session.execute('USE ' + "PlayerKills")
 
     #
-    insert_statement = session.prepare("INSERT INTO data (time, hero, kills) VALUES (?, ?, ?)")
-
+#    insert_statement = session.prepare("INSERT INTO data (time, hero, kills) VALUES (?, ?, ?)")
+    insert_statement = session.prepare("INSERT INTO killerstats (time, killerhero, kills, victimhero) VALUES (?, ?, ?, ?)")
     count = 0
 
     # batch insert into cassandra database
     batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
     
     for record in iter:
-        batch.add(insert_statement,( record[1][0], record[0], record[1][1]))
-
+        batch.add(insert_statement,( record[1][0], record[1][1], record[1][3], record [1][2]))
+#        batch.add(insert_statement,( record[1][0], record[0], record[1][1]))
 
         # split the batch, so that the batch will not exceed the size limit
         count += 1
+#        if count % 500 == 0:
         if count % 500 == 0:
             session.execute(batch)
             batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
@@ -149,10 +150,12 @@ def sendCassandra(iter):
 
 def extractKiller(v):
     try:
-        return(int(v[2]), (int(v[0]), 1))
+        key = v[0]+ '-' + v[2] + '-' + v[3]
+        return(key, (int(v[0]), int(v[2]), int(v[3]), 1))
+#        return(int(v[2]), (int(v[0]), 1))
     except:
-        return (None, (None, None))
-
+#        return (None, (None, None))
+        return (None, (None, None, None))
 ###################################################
 ##                     Main                      ## 
 ###################################################
@@ -172,7 +175,8 @@ def main():
     # Transform player name into key
     killer = kafkaStream.map(lambda v:v[1][1:-2].split(','))\
                 .map(extractKiller)\
-                .reduceByKey(lambda x, y: (x[0], x[1]+y[1]) )
+                .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
+#                .reduceByKey(lambda x, y: (x[0], x[1]+y[1]) )
     killer.pprint()
    
     # use the window function to group the data by window

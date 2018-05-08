@@ -55,10 +55,20 @@ def update_graph_live(n):
 
     
     #Grab data from Cassandra
-    result = session.execute('SELECT kills, time  FROM data WHERE hero = 14'  )
+    #result = session.execute('SELECT kills, time  FROM killerstats WHERE killerhero = 14 '  )
+    result = session.execute('SELECT SUM(kills), time  FROM killerstats \
+        WHERE killerhero = 14 GROUP BY time LIMIT 20'  )
+    maxTime = result[0][1]
+    print ('Max Time = ', maxTime)
     for row in result:
-        tableToDash[0].append(row.kills)
+        print (row)
+        tableToDash[0].append(row.system_sum_kills)
         tableToDash[1].append(row.time)
+#    for row in result:
+#        print (row)
+#        tableToDash[0].append(row.system_sum_kills)
+#        tableToDash[1].append(row.time)
+
     #print (dictFromCas)
     #Create table to send to plot in Dash
     #Fill in unknown values
