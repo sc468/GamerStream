@@ -61,6 +61,8 @@ from cassandra.cluster import Cluster
 from cassandra.query import BatchStatement
 from cassandra import ConsistencyLevel
 
+import time
+
 # configuration file
 #import config
 
@@ -141,11 +143,27 @@ def sendCassandra(iter):
         count += 1
 #        if count % 500 == 0:
         if count % 500 == 0:
+            startTime = time.time()
             session.execute(batch)
+            elapsedTime= time.time()-startTime
+            with open ('/home/ubuntu/outputWriteTime.txt','a+') as outputFile:
+                print ('500 counts')
+                outputFile.write(str(count))
+                outputFile.write(', ')
+                outputFile.write(str(elapsedTime))
+                outputFile.write('\n')
             batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
 
     # send the batch that is less than 500            
+    startTime = time.time()
     session.execute(batch)
+    elapsedTime= time.time()-startTime
+    with open ('/home/ubuntu/outputWriteTime.txt','a+') as outputFile:
+        print ('Sending batch')
+        outputFile.write(str(count))
+        outputFile.write(', ')
+        outputFile.write(str(elapsedTime))
+        outputFile.write('\n')
     session.shutdown()
 
 def extractKiller(v):

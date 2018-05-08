@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+import time
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly
 from dash.dependencies import Input, Output
+import plotly.graph_objs as go
 
 #######################################################
 # This script is for reading from  a table in cassandra #
@@ -24,6 +27,10 @@ session.execute('USE ' + CASSANDRA_NAMESPACE)
 #######################################################
 # Setup Website with Dash #
 #######################################################
+
+#Clear log for recording read times
+with open('outputReadTime.txt', 'w') as timelog:    
+    timelog.write('Read Time (s)\n')
 
 app = dash.Dash()
 
@@ -57,7 +64,13 @@ def update_graph_live(n):
     #result = session.execute('SELECT kills, time  FROM killerstats WHERE killerhero = 14 '  )
     window = 20
     cassandraCommand = 'SELECT SUM(kills), time  FROM killerstats WHERE killerhero = 14 GROUP BY time LIMIT ' + str(window)
+    starttime = time.time()
     result = session.execute(cassandraCommand)
+    elapsedtime = time.time() - starttime
+    print ('Elapsed time = ', elapsedtime)
+    with open ('outputReadTime.txt', 'a') as timelog:
+        timelog.write(str(elapsedtime))
+        timelog.write('\n')
     try:
         maxTime = result[0][1]
     except:
@@ -66,6 +79,7 @@ def update_graph_live(n):
     for row in result:
         print (row)
         dictFromCas[row.time] = row.system_sum_kills
+
 #        tableToDash[0].append(row.system_sum_kills)
 #        tableToDash[1].append(row.time)
 
@@ -77,14 +91,14 @@ def update_graph_live(n):
     #print (dictFromCas)
     #Create table to send to plot in Dash
     #Fill in unknown values
-  #  tableToDash = [['kills'], ['time']]
-    for i in range (maxTime-window, maxTime):
+ #  tableToDash = [['kills'], ['time']]
+    for i in range (maxTime-window+1, maxTime+1):
         tableToDash[1].append(i)
         if i in dictFromCas:
             tableToDash[0].append(dictFromCas[i])
         else:
             tableToDash[0].append(0)
-
+    print (tableToDash)
     # Create the graph with subplots
     fig = plotly.tools.make_subplots(rows=1, cols=1, vertical_spacing=0.2)
     fig['layout']['margin'] = {
@@ -93,12 +107,19 @@ def update_graph_live(n):
     fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
     fig['layout']['xaxis'] = {'title':'Time (seconds)'}
     fig['layout']['yaxis']= {'title':'Kill Rate (players/second)'}
-    fig.append_trace({
-        'x': tableToDash[1],
-        'y': tableToDash[0],
-        'name': 'Kill Rate of Hero',
-        'type': 'line'
-    }, 1, 1)
+    fig.append_trace(go.Scatter(
+        x= tableToDash[1],
+        y= tableToDash[0],
+        name= 'Kill Rate of Hero',
+        mode= 'lines+markers'
+    ), 1, 1)
+
+#    fig.append_trace({
+#        'x': tableToDash[1],
+#        'y': tableToDash[0],
+#        'name': 'Kill Rate of Hero',
+#        'type': 'bar'
+#    }, 1, 1)
 
     return fig
 
