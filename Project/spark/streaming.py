@@ -60,7 +60,8 @@ from operator import add
 from cassandra.cluster import Cluster
 from cassandra.query import BatchStatement
 from cassandra import ConsistencyLevel
-
+#from cassandra.cqlengine.query import BatchType
+from cassandra.query import BatchType
 import time
 
 # configuration file
@@ -128,42 +129,48 @@ def sendCassandra(iter):
     session.execute('USE ' + "PlayerKills")
 
     #
-#    insert_statement = session.prepare("INSERT INTO data (time, hero, kills) VALUES (?, ?, ?)")
-    insert_statement = session.prepare("INSERT INTO killerstats (time, killerhero, kills, victimhero) VALUES (?, ?, ?, ?)")
+#    insert_statement = session.prepare("INSERT INTO killerstats (time, killerhero, kills, victimhero) VALUES (?, ?, ?, ?)")
+    insert_statement = session.prepare("UPDATE killerstats SET kills = kills + ? WHERE time = ? AND killerhero = ? AND victimhero = ? ")
     count = 0
 
     # batch insert into cassandra database
-    batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
+#    batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
+    batch = BatchStatement( batch_type=BatchType.COUNTER)
     
     for record in iter:
-        batch.add(insert_statement,( record[1][0], record[1][1], record[1][3], record [1][2]))
-#        batch.add(insert_statement,( record[1][0], record[0], record[1][1]))
-
-        # split the batch, so that the batch will not exceed the size limit
+#        batch.add(insert_statement,( record[1][0], record[1][1], record[1][3], record [1][2]))
+        batch.add(insert_statement,(record[1][3], record[1][0], record[1][1], record[1][2]))
+ #       batch.add(insert_statement,(1,2,3,4))       
+#        batch.add("UPDATE killerstats SET kills = kills + 1 WHERE time = 2 AND killerhero = 3 AND victimhero = 4 ")  
+ # split the batch, so that the batch will not exceed the size limit
         count += 1
 #        if count % 500 == 0:
         if count % 500 == 0:
             startTime = time.time()
             session.execute(batch)
+#            session.execute("UPDATE killerstats SET kills = kills + 1 WHERE time = 2 AND killerhero = 3 AND victimhero = 4 ")
             elapsedTime= time.time()-startTime
             with open ('/home/ubuntu/outputWriteTime.txt','a+') as outputFile:
                 print ('500 counts')
-                outputFile.write(str(count))
-                outputFile.write(', ')
-                outputFile.write(str(elapsedTime))
-                outputFile.write('\n')
-            batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
-
+               # outputFile.write(str(count))
+               # outputFile.write(', ')
+               # outputFile.write(str(elapsedTime))
+               # outputFile.write('\n')
+            batch = BatchStatement( batch_type=BatchType.COUNTER)
+    #        batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
     # send the batch that is less than 500            
     startTime = time.time()
+
     session.execute(batch)
+#    session.execute("UPDATE killerstats SET kills = kills + 1 WHERE time = 2 AND killerhero = 3 AND victimhero = 4 ")
+
     elapsedTime= time.time()-startTime
     with open ('/home/ubuntu/outputWriteTime.txt','a+') as outputFile:
         print ('Sending batch')
-        outputFile.write(str(count))
-        outputFile.write(', ')
-        outputFile.write(str(elapsedTime))
-        outputFile.write('\n')
+        #outputFile.write(str(count))
+        #outputFile.write(', ')
+        #outputFile.write(str(elapsedTime))
+        #outputFile.write('\n')
     session.shutdown()
 
 def extractKiller(v):
@@ -185,7 +192,7 @@ def main():
     sc.setLogLevel("WARN")
     
     # set microbatch interval seconds
-    ssc = StreamingContext(sc, 0.5)
+    ssc = StreamingContext(sc, 1)
   #  ssc.checkpoint(config.CHECKPOINT_DIR)
     
     # create a direct stream from kafka without using receiver
@@ -198,25 +205,7 @@ def main():
 #                .reduceByKey(lambda x, y: (x[0], x[1]+y[1]) )
     killer.pprint()
    
-    # use the window function to group the data by window
-    #dataWindow_ds = data_ds.map(lambda x: (x['userid'], (x['acc'], x['time']))).window(10,10)
-    
-    '''    
-
-    '''
-    #dataWindowAvgStd_ds = dataWindow_ds\
-    #       .map(getSquared)\
-    #       .reduceByKey(lambda a, b: (a[0] + b[0], a[1] + b[1], a[2] + b[2]))\
-    #       .map(getAvgStd)
-    
-    # join the original Dstream with individual record and the aggregated Dstream with window-avg and window-std 
-    #joined_ds = dataWindow_ds.join(dataWindowAvgStd_ds)
-
-    # label each record 'safe' or 'danger' by comparing the data with the window-avg and window-std    
-    #result_ds = joined_ds.map(labelAnomaly)
-    #resultSimple_ds = result_ds.map(lambda x: (x[0], x[1], x[5]))
-
-    # Send the status table to rethinkDB and all data to cassandra    
+    # Send data to cassandra    
     killer.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))
     #resultSimple_ds.foreachRDD(sendRethink)
     

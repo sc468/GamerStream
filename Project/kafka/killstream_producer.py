@@ -47,7 +47,7 @@ def main():
             currentTime = int(line.split(',')[0][1:])
             if currentTime == prevTime:
                 producer.send('data', line.encode('utf-8'))
-                print (line)
+                #print (line)
             else:
                 prevTime = currentTime
                 time.sleep(waitTime)
