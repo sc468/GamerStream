@@ -180,6 +180,7 @@ def extractKiller(v):
 
 def main():
 
+
     sc = SparkContext(appName="PythonSparkStreamingKafka_RM_01")
     sc.setLogLevel("WARN")
     
