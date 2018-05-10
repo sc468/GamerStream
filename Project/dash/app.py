@@ -19,7 +19,8 @@ from cassandra.cluster import Cluster
 
 CASSANDRA_NAMESPACE = 'PlayerKills'
 
-cluster = Cluster(['54.214.213.178', '52.88.247.214', '54.190.18.13', '52.41.141.29'])  #config.CASSANDRA
+#cluster = Cluster(['54.214.213.178', '52.88.247.214', '54.190.18.13', '52.41.141.29'])  #config.CASSANDRA
+cluster = Cluster(['52.11.210.69', '50.112.90.110', '54.149.158.21'])
 session = cluster.connect()
 
 session.execute('USE ' + CASSANDRA_NAMESPACE)
@@ -63,21 +64,21 @@ def update_graph_live(n):
     #Grab data from Cassandra
     #result = session.execute('SELECT kills, time  FROM killerstats WHERE killerhero = 14 '  )
     window = 20
-    cassandraCommand = 'SELECT SUM(kills), time  FROM killerstats WHERE killerhero = 14 GROUP BY time LIMIT ' + str(window)
+    cassandraCommand = 'SELECT SUM(kills), time  FROM killerstats WHERE killerhero = 0 GROUP BY time LIMIT ' + str(window)
     starttime = time.time()
     result = session.execute(cassandraCommand)
     elapsedtime = time.time() - starttime
-    print ('Elapsed time = ', elapsedtime)
-    with open ('outputReadTime.txt', 'a') as timelog:
-        timelog.write(str(elapsedtime))
-        timelog.write('\n')
+    #print ('Elapsed time = ', elapsedtime)
+#    with open ('outputReadTime.txt', 'a') as timelog:
+#        timelog.write(str(elapsedtime))
+#        timelog.write('\n')
     try:
         maxTime = result[0][1]
     except:
         maxTime = 0
     dictFromCas = {}
     for row in result:
-        print (row)
+        #print (row)
         dictFromCas[row.time] = row.system_sum_kills
 
 #        tableToDash[0].append(row.system_sum_kills)
@@ -98,7 +99,7 @@ def update_graph_live(n):
             tableToDash[0].append(dictFromCas[i])
         else:
             tableToDash[0].append(0)
-    print (tableToDash)
+    #print (tableToDash)
     # Create the graph with subplots
     fig = plotly.tools.make_subplots(rows=1, cols=1, vertical_spacing=0.2)
     fig['layout']['margin'] = {
