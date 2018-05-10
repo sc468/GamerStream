@@ -11,6 +11,10 @@ NumPlayers = int(sys.argv[1])
 
 InputFileName = '2-CleanedData'+str(NumPlayers)+'.txt'
 OutputFileName = '3-UnsortedKillStream'+str(NumPlayers)+'.txt'
+
+import random
+random.seed(1)
+
 ########################################################
 
 ##############################################################################
@@ -38,10 +42,11 @@ import time
 
 
 
-KillStream = ''
+#KillStream = ''
 with open(InputFileName, 'r') as InputMatchData, open (OutputFileName, 'w') as OutputData:
     MatchCSV = csv.reader(InputMatchData, quotechar = '"', doublequote = False)
     count = 0
+    numMissedPlayers = 0
     for row in MatchCSV:
         count += 1
         
@@ -52,16 +57,21 @@ with open(InputFileName, 'r') as InputMatchData, open (OutputFileName, 'w') as O
         match_id = row[0].split('\'')[1]
         player_id = row[1].split('\'')[1]
         player_hero = row[2].split('\'')[1]
+        randomTime = random.randrange(-1200,1200,1)
         for kill_time, kill_victim in zip(row[3::2],row[4::2]):
-            kill_time = kill_time.split('\'')[1].split(':')[1]
-            kill_victim = (kill_victim.split('\'')[1].split(':')[1])[14:]
-            try:
-                output = match_id + ', ' + player_id + ', ' + player_hero + ', ' \
-                    + kill_time + ', ' + str(hero_dict[kill_victim]) + '\n'
-                OutputData.write(output)
-            except KeyError:
-                pass
-                #output = 'Error with victim:' + kill_victim + ', not a DOTA2 Hero'
-            KillStream = KillStream + output
+            try: 
+                kill_time = kill_time.split('\'')[1].split(':')[1]
+                kill_time = int(kill_time) + randomTime
+                kill_victim = (kill_victim.split('\'')[1].split(':')[1])[14:]
+                if kill_time>=0:
+                    output = match_id + ', ' + player_id + ', ' + player_hero + ', ' \
+                        + str(kill_time) + ', ' + str(hero_dict[kill_victim]) + '\n'
+                    OutputData.write(output)
+            except (KeyError, ValueError):
+                numMissedPlayers += 1
+                    #output = 'Error with victim:' + kill_victim + ', not a DOTA2 Hero'
+                #KillStream = KillStream + output
 print ('2- Created KillStream ' , OutputFileName)
+print ('Numbers of missed players =', numMissedPlayers)
+print ('Real number of players = ', (NumPlayers - numMissedPlayers)) 
 #print (KillStream)
