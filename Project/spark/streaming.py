@@ -162,7 +162,7 @@ def main():
                 .map(extractKiller)\
                 .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
 #                .reduceByKey(lambda x, y: (x[0], x[1]+y[1]) )
-    killer.pprint()
+#    killer.pprint()
    
     # Send data to cassandra    
     killer.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))
@@ -172,7 +172,7 @@ def main():
     totalkills = prekiller\
                 .map(extractKiller2)\
                 .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
-    totalkills.pprint()
+#    totalkills.pprint()
    
     # Send data to cassandra    
     totalkills.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))

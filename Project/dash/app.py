@@ -63,7 +63,7 @@ def update_graph_live(n):
     #Grab data from Cassandra
     #result = session.execute('SELECT kills, time  FROM killerstats WHERE killerhero = 14 '  )
     window = 20
-    cassandraCommand = 'SELECT SUM(kills), time  FROM killerstats WHERE killerhero = 14 GROUP BY time LIMIT ' + str(window)
+    cassandraCommand = 'SELECT SUM(kills), time  FROM killerstats WHERE killerhero = 0 GROUP BY time LIMIT ' + str(window)
     starttime = time.time()
     result = session.execute(cassandraCommand)
     elapsedtime = time.time() - starttime
