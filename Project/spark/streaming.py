@@ -72,7 +72,8 @@ def getStatusList(rdd):
 
 def sendCassandra(iter):
     print("send to cassandra")
-    cluster = Cluster(['54.214.213.178', '52.88.247.214', '54.190.18.13', '52.41.141.29'])
+#    cluster = Cluster(['54.214.213.178', '52.88.247.214', '54.190.18.13', '52.41.141.29'])
+    cluster = Cluster(['52.11.210.69', '50.112.90.110', '54.149.158.21'])
     session = cluster.connect()
     session.execute('USE ' + "PlayerKills")
 
@@ -149,7 +150,7 @@ def main():
     sc.setLogLevel("WARN")
     
     # set microbatch interval seconds
-    ssc = StreamingContext(sc, 1)
+    ssc = StreamingContext(sc, 2)
   #  ssc.checkpoint(config.CHECKPOINT_DIR)
     
     # create a direct stream from kafka without using receiver
@@ -162,20 +163,23 @@ def main():
                 .map(extractKiller)\
                 .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
 #                .reduceByKey(lambda x, y: (x[0], x[1]+y[1]) )
-#    killer.pprint()
-   
-    # Send data to cassandra    
-    killer.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))
-    #resultSimple_ds.foreachRDD(sendRethink)
+    killer.pprint()
 
     # Transform player name into key
-    totalkills = prekiller\
-                .map(extractKiller2)\
+    totalkills = killer\
+                .map(lambda x: (x[1][0], (x[1][0], 0, 0, x[1][3])))\
                 .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
 #    totalkills.pprint()
    
     # Send data to cassandra    
-    totalkills.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))
+    totalkills.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))   
+
+
+
+    # Send data to cassandra    
+    killer.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))
+    #resultSimple_ds.foreachRDD(sendRethink)
+
 
     
     ssc.start()

@@ -12,7 +12,7 @@ import time
 
 
 def main():
-    NumPlayers = 2000000
+    NumPlayers = 1000000
     InputFile = '/home/ubuntu/GamerStream/Project/simstream/4-SortedKillStream' + str(NumPlayers) + '.txt'
     KafkaProducerServers = "localhost:9092"
 
