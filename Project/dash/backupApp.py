@@ -5,7 +5,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 
 #######################################################
@@ -27,17 +27,8 @@ session.execute('USE ' + CASSANDRA_NAMESPACE)
 # Setup Website with Dash #
 #######################################################
 
-#streamStarted = False
-#windowSize = 20
-#windowStart = 0
-#bufferTime = 2
-#tableToDash = [['kills'], ['time']]
-
-
-heroListDict = [{'label': 'All Heroes', 'value': 0},\
-            {'label': 'Hero 1', 'value': 1},\
-            {'label': 'Hero 2', 'value': 2}\
-        ]
+prevTableToDash = []
+tableToDash = [['kills'], ['time']]
 
 #Clear log for recording read times
 with open('outputReadTime.txt', 'w') as timelog:    
@@ -50,53 +41,34 @@ colors = {
     'text': '#7FDBFF'
 }
 
-
-
 app = dash.Dash(__name__)
-app.layout = html.Div([
-    html.H4('PlayerStream'),
-    dcc.Dropdown(
-        id='my-dropdown',
-        options= heroListDict ,
-        value=0
-    ),
-    html.Div(id='output-container'),
-
+app.layout = html.Div(
     html.Div([
-        dcc.Graph(id='live-update-graph', animate = True),
+        html.H4('PlayerStream'),
+        dcc.Graph(id='live-update-graph'),
         dcc.Interval(
             id='interval-component',
             interval=1000, # in milliseconds
             n_intervals=0
         )
     ])
-])
-
-@app.callback(
-    Output('output-container', 'children'),
-    [Input('my-dropdown', 'value')])
-def update_output(value):
-    return 'You have selected "{}"'.format(value)
-
+)
 
 # Multiple components can update everytime interval gets fired.
 @app.callback(Output('live-update-graph', 'figure'),
-              [ Input('interval-component', 'n_intervals') ],
-            [State('my-dropdown', 'value')])
-def update_graph_live( n, heroNum):
-    tableToDash = [['kills'], ['time']]
+              [Input('interval-component', 'n_intervals')])
+def update_graph_live(n):
 
-    windowSize = 20
+#    tableToDash = [['kills'], ['time']]
+
+    
     #Grab data from Cassandra
     #result = session.execute('SELECT kills, time  FROM killerstats WHERE killerhero = 14 '  )
-    #window = 20
-    cassandraCommand = 'SELECT SUM(kills), time  FROM killerstats WHERE killerhero = ' + str(heroNum) +' GROUP BY time LIMIT ' + str(windowSize)
-    print ('Cassandra Command:')
-    print (cassandraCommand)
+    window = 20
+    cassandraCommand = 'SELECT SUM(kills), time  FROM killerstats WHERE killerhero = 0 GROUP BY time LIMIT ' + str(window)
     starttime = time.time()
     result = session.execute(cassandraCommand)
     elapsedtime = time.time() - starttime
-    print ('Result:', result)
     #print ('Elapsed time = ', elapsedtime)
 #    with open ('outputReadTime.txt', 'a') as timelog:
 #        timelog.write(str(elapsedtime))
@@ -122,21 +94,21 @@ def update_graph_live( n, heroNum):
     #Create table to send to plot in Dash
     #Fill in unknown values
  #  tableToDash = [['kills'], ['time']]
-    for i in range (maxTime-windowSize+1, maxTime+1):
+    for i in range (maxTime-window+1, maxTime+1):
         tableToDash[1].append(i)
         if i in dictFromCas:
             tableToDash[0].append(dictFromCas[i])
         else:
             tableToDash[0].append(0)
-    print (tableToDash)
+    #print (tableToDash)
     # Create the graph with subplots
     fig = plotly.tools.make_subplots(rows=1, cols=1, vertical_spacing=0.2)
     fig['layout']['margin'] = {
         'l': 60, 'r': 60, 'b': 30, 't': 10
     }
     fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
-    fig['layout']['xaxis'] = {'title':'Time (seconds)', 'range': [maxTime-windowSize+1, maxTime+1], 'ticks': 'outside', 'dtick':1}
-    fig['layout']['yaxis']= {'title':'Kill Rate (players/second)', 'range': [0,6000]}
+    fig['layout']['xaxis'] = {'title':'Time (seconds)'}
+    fig['layout']['yaxis']= {'title':'Kill Rate (players/second)'}
     fig.append_trace(go.Scatter(
         x= tableToDash[1],
         y= tableToDash[0],
