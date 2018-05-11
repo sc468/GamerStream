@@ -1,8 +1,5 @@
-# PlayerStream
-Insight Data Engineering 2018 Project
-# 2018-InsightDE
-
-# Project Idea: Player Stream
+# 2018-Insight Data Engineering Project
+# GamerStream
 Real-time analytics in online games.
 
 # What is the purpose, and most common use cases?
@@ -19,11 +16,13 @@ The streamed data may be stored for further large-scale batch processing.
 Additional features may be added to the pipelin. One possibility is a anomaly detection for player death count, which may point to game bugs.
 
 # Technologies
-Ingestion technology: Kafka, Kinesis.
+Ingestion technology: Kafka
 
-Streaming technologies:Kafka streams, Spark streaming, Storm, Heron, Flink.
+Streaming technologies: Spark streaming
 
-Database: Tabular data store. PostgreSQL, MySQL.
+Database: Cassandra
+
+WebUI: Dash
 
 # Proposed architecture
 Streaming architecture

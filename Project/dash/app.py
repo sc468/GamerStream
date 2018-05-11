@@ -78,22 +78,80 @@ app.layout = html.Div([
     ),
 
     html.Div([
-        dcc.Graph(id='live-update-graph', animate = True),
+        dcc.Graph(id='live-update-graph', animate = True), 
         dcc.Interval(
             id='interval-component',
-            interval=1000, # in milliseconds
+            interval=2000, # in milliseconds
             n_intervals=0
         )
     ])
 ])
 
-@app.callback(
-    Output('output-container', 'children'),
-    [Input('my-dropdown', 'value')])
-def update_output(value):
-    return 'You have selected "{}"'.format(value)
+#@app.callback(
+#    Output('output-container', 'children'),
+#    [Input('my-dropdown', 'value')])
+#def update_output(value):
+#    return 'You have selected "{}"'.format(value)
 
-def plotLineGraph(cassandraCommand, windowSize):
+def plotBarGraph(cassandraCommand, windowSize, newestTime):
+
+    tableToDash = [['kills'], ['hero']]
+    #Grab data from Cassandra
+    print ('Cassandra Command:')
+    print (cassandraCommand)
+    starttime = time.time()
+    result = session.execute(cassandraCommand)
+    elapsedtime = time.time() - starttime
+    print ('Result:', result)
+
+    maxTime = newestTime
+
+    dictFromCas = {}
+    listFromCas = []
+
+    # Create the graph with subplots
+    fig = plotly.tools.make_subplots(rows=1, cols=1, vertical_spacing=0.2)
+
+    for row in result:
+        dictFromCas[row.victimhero] = row.kills
+        listFromCas.append(row.kills)
+    for i in range (1,112):
+        if i in dictFromCas:
+            yPoints = [0,dictFromCas[i]]
+            xPoints = [i,i] 
+            fig.append_trace(go.Scatter(
+                x= xPoints,
+                y= yPoints,
+                mode = 'lines+markers'
+            ), 1, 1)
+        else:
+            xPoints = [i]
+            yPoints = [0]
+            fig.append_trace(go.Scatter(
+                x= xPoints,
+                y= yPoints,
+                mode = 'markers'
+             ), 1, 1)
+
+    print (tableToDash)
+
+    #Find largest y value to scale graph
+    try:
+        maxY = max(listFromCas)
+        maxYDigits = len(str(maxY))
+        yAxisMax = 10**(maxYDigits )
+    except:
+        yAxisMax = 10
+
+    fig['layout']['margin'] = {
+        'l': 60, 'r': 60, 'b': 30, 't': 10
+    }
+    fig['layout']['xaxis'] = {'title':'Victim Hero', 'ticks': 'outside', 'dtick':1}
+    fig['layout']['yaxis']= {'title':'Kill Rate (players/second)', 'range': [0,yAxisMax]}
+    fig['layout']['width'] = 2000
+    return fig
+
+def plotLineGraph(cassandraCommand, windowSize, newestTime):
 
     tableToDash = [['kills'], ['time']]
     #Grab data from Cassandra
@@ -103,10 +161,7 @@ def plotLineGraph(cassandraCommand, windowSize):
     result = session.execute(cassandraCommand)
     elapsedtime = time.time() - starttime
     print ('Result:', result)
-    try:
-        maxTime = result[0][1]
-    except:
-        maxTime = 0
+    maxTime = newestTime   
 
     dictFromCas = {}
     listFromCas = []
@@ -134,7 +189,6 @@ def plotLineGraph(cassandraCommand, windowSize):
     fig['layout']['margin'] = {
         'l': 60, 'r': 60, 'b': 30, 't': 10
     }
-    fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
     fig['layout']['xaxis'] = {'title':'Time (seconds)', 'range': [maxTime-windowSize+1, maxTime+1], 'ticks': 'outside', 'dtick':1}
     fig['layout']['yaxis']= {'title':'Kill Rate (players/second)', 'range': [0,yAxisMax]}
     fig.append_trace(go.Scatter(
@@ -152,18 +206,25 @@ def plotLineGraph(cassandraCommand, windowSize):
               [ Input('interval-component', 'n_intervals') ],
             [State('my-dropdown', 'value'), State('my-buttons', 'value')])
 def update_graph_live( n, heroNum,buttonState):
+    #Grab max time
+    cassandraCommand = 'SELECT time  FROM killerstats LIMIT 1' 
+    newestTime = session.execute(cassandraCommand)
+    try:
+        newestTime = newestTime[0].time
+    except:
+        newestTime = 0
 
     windowSize = 20   
     cassandraCommand = ''
     if buttonState == 'killButton': 
         cassandraCommand = 'SELECT SUM(kills), time  FROM killerstats  WHERE killerhero = ' + str(heroNum) +' GROUP BY time LIMIT ' + str(windowSize)
-        return plotLineGraph(cassandraCommand, windowSize)
+        return plotLineGraph(cassandraCommand, windowSize, newestTime)
     elif buttonState == 'deathButton':
         cassandraCommand = 'SELECT SUM(kills), time  FROM victimstats  WHERE victimhero = ' + str(heroNum) +' GROUP BY time LIMIT ' + str(windowSize)
-        return plotLineGraph(cassandraCommand, windowSize)
+        return plotLineGraph(cassandraCommand, windowSize, newestTime)
     else:
-        cassandraCommand = 'SELECT SUM(kills), time  FROM killerstats  WHERE killerhero = ' + str(heroNum) +' GROUP BY time LIMIT ' + str(windowSize)
-        return plotLineGraph(cassandraCommand, windowSize)
+        cassandraCommand = 'SELECT kills, victimhero  FROM killerstats  WHERE time = ' + str(newestTime) + ' AND killerhero = ' + str(heroNum) 
+        return plotBarGraph(cassandraCommand, windowSize, newestTime)
 
 if __name__ == '__main__':
 #    app.run_server(debug=True)
