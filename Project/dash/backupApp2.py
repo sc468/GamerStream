@@ -93,9 +93,24 @@ app.layout = html.Div([
 def update_output(value):
     return 'You have selected "{}"'.format(value)
 
-def plotLineGraph(cassandraCommand, windowSize):
-
+# Multiple components can update everytime interval gets fired.
+@app.callback(Output('live-update-graph', 'figure'),
+              [ Input('interval-component', 'n_intervals') ],
+            [State('my-dropdown', 'value'), State('my-buttons', 'value')])
+def update_graph_live( n, heroNum,buttonState):
     tableToDash = [['kills'], ['time']]
+
+    windowSize = 20
+    
+    cassandraCommand = ''
+    if buttonState == 'killButton': 
+        cassandraCommand = 'SELECT SUM(kills), time  FROM killerstats  WHERE killerhero = ' + str(heroNum) +' GROUP BY time LIMIT ' + str(windowSize)
+    elif buttonState == 'deathButton':
+        cassandraCommand = 'SELECT SUM(kills), time  FROM victimstats  WHERE victimhero = ' + str(heroNum) +' GROUP BY time LIMIT ' + str(windowSize)
+    else:
+        cassandraCommand = 'SELECT SUM(kills), time  FROM killerstats  WHERE killerhero = ' + str(heroNum) +' GROUP BY time LIMIT ' + str(windowSize)
+   
+    windowSize = 20
     #Grab data from Cassandra
     print ('Cassandra Command:')
     print (cassandraCommand)
@@ -120,7 +135,7 @@ def plotLineGraph(cassandraCommand, windowSize):
         else:
             tableToDash[0].append(0)
     print (tableToDash)
-
+    
     #Find largest y value to scale graph
     try:
         maxY = max(listFromCas)
@@ -146,24 +161,8 @@ def plotLineGraph(cassandraCommand, windowSize):
 
     return fig
 
+def plotLineGraphs():
 
-# Multiple components can update everytime interval gets fired.
-@app.callback(Output('live-update-graph', 'figure'),
-              [ Input('interval-component', 'n_intervals') ],
-            [State('my-dropdown', 'value'), State('my-buttons', 'value')])
-def update_graph_live( n, heroNum,buttonState):
-
-    windowSize = 20   
-    cassandraCommand = ''
-    if buttonState == 'killButton': 
-        cassandraCommand = 'SELECT SUM(kills), time  FROM killerstats  WHERE killerhero = ' + str(heroNum) +' GROUP BY time LIMIT ' + str(windowSize)
-        return plotLineGraph(cassandraCommand, windowSize)
-    elif buttonState == 'deathButton':
-        cassandraCommand = 'SELECT SUM(kills), time  FROM victimstats  WHERE victimhero = ' + str(heroNum) +' GROUP BY time LIMIT ' + str(windowSize)
-        return plotLineGraph(cassandraCommand, windowSize)
-    else:
-        cassandraCommand = 'SELECT SUM(kills), time  FROM killerstats  WHERE killerhero = ' + str(heroNum) +' GROUP BY time LIMIT ' + str(windowSize)
-        return plotLineGraph(cassandraCommand, windowSize)
 
 if __name__ == '__main__':
 #    app.run_server(debug=True)
