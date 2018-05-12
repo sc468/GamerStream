@@ -43,14 +43,15 @@ session.execute('USE ' + CASSANDRA_NAMESPACE)
 
 
 heroListDict = [{'label': 'All Heroes', 'value': 0}]
-heroImageDict = {}
+heroImageDict = {0:'https://cdn-images-1.medium.com/max/1191/0*vbw4wQW_Xq2_3eOo.jpg'}
+heroNameDict = {0: heroListDict[0]['label']}
 for hero  in heroDict.Names['heroes']:
     name = hero['localized_name']
     id = hero['id']
     heroListDict.append( {'label':hero['localized_name'], 'value': hero['id']})
-    formatHeroName = hero['localized_name'].replace(' ','_').lower()
     formatHeroName = hero['name']
     heroImageDict[hero['id']]=  'http://cdn.dota2.com/apps/dota2/images/heroes/' + formatHeroName + '_full.png'  
+    heroNameDict [hero['id']] = hero['localized_name'] 
     
 
 #Clear log for recording read times
@@ -67,13 +68,14 @@ colors = {
 
 app = dash.Dash(__name__)
 app.layout = html.Div([
+#Header image and title
     html.Div([
         html.Img(src = 'https://cdn.shopify.com/s/files/1/0972/9846/products/Front_c32054d3-16f9-477b-b5de-b8ad1b681443_2048x2048.jpg?v=1523626312', 
             height =100, style = {'display': 'inline'} ),
         html.H1('GamerStream', style = {'display': 'inline'})
     ], style = {'display': 'block'}),
    
-#    html.Img(src= 'http://cdn.dota2.com/apps/dota2/images/heroes/earthshaker_hphover.png?v=4507189' ),
+#Dropdown
     dcc.Dropdown(
         id='my-dropdown',
         options= heroListDict ,
@@ -81,21 +83,24 @@ app.layout = html.Div([
     ),
     html.Div(id='output-container'),
 
+#Radio Buttons
     dcc.RadioItems(
         id='my-buttons',
         options=[
-            {'label': 'Kills', 'value': 'killButton'},
-            {'label': 'Deaths', 'value': 'deathButton'},
-            {'label': 'Matchup', 'value': 'matchupButton'}
+            {'label': 'Kills  ', 'value': 'killButton'},
+            {'label': 'Deaths  ', 'value': 'deathButton'},
+            {'label': 'Matchup  ', 'value': 'matchupButton'}
         ],
         value='killButton',
-        labelStyle={'display': 'inline-block'}
-    ),
+        labelStyle={'display': 'inline-block', 'font-size':20, 'margin-bottom':20, 'margin-top':20} ),
+
     html.Div([
-        html.Img(id = 'side-hero-image', 
-            height =100, style = {'width': '30%', 'height':'auto','display': 'inline-block'} ),
-        dcc.Graph(id='live-update-graph', animate = True, style = {'width':'69%','display': 'inline-block'}), 
-    ], style = {'display': 'block'}),
+        html.Img(id = 'side-hero-image', src = 'https://cdn-images-1.medium.com/max/1191/0*vbw4wQW_Xq2_3eOo.jpg',
+             style = { 'width':'95%', 'height':'auto', 'display': 'inline-block', 'border-radius':'2%', 'margin-bottom':2} ),
+        html.H2(id = 'side-hero-label', style = {'text-align': 'center', 'margin-top':2})
+    ], style = {'float':'left', 'width': '30%'}),
+
+    dcc.Graph(id='live-update-graph', animate = True, style = {'width':'69%','display': 'inline-block', 'float': 'left'}), 
 
     dcc.Interval(
         id='interval-component',
@@ -108,9 +113,14 @@ app.layout = html.Div([
 @app.callback(
     Output('side-hero-image', 'src'),
     [Input('my-dropdown', 'value')])
-def update_output(value):
-    print(heroImageDict[value])
+def update_hero_image(value):
     return  heroImageDict[value]
+
+@app.callback(
+    Output('side-hero-label', 'children'),
+    [Input('my-dropdown', 'value')])
+def update_hero_label(value):
+    return  heroNameDict[value]
 
 def plotBarGraph(cassandraCommand, windowSize, newestTime):
 
@@ -165,9 +175,9 @@ def plotBarGraph(cassandraCommand, windowSize, newestTime):
     fig['layout']['margin'] = {
         'l': 60, 'r': 60, 'b': 30, 't': 10
     }
-    fig['layout']['xaxis'] = {'title':'Victim Hero', 'ticks': 'outside', 'dtick':1}
+    fig['layout']['xaxis'] = {'title':'Victim Hero', 'ticks': 'outside', 'dtick':1, 'range':[0,112]}
     fig['layout']['yaxis']= {'title':'Kill Rate (players/second)', 'range': [0,yAxisMax]}
-    fig['layout']['width'] = 2000
+    fig['layout']['width'] = 6000
     return fig
 
 def plotLineGraph(cassandraCommand, windowSize, newestTime):
