@@ -4,7 +4,6 @@
 #contains heroNames, heroPics
 import heroDict
 
-print (heroDict.Names['heroes'][0]['name']) 
 
 import time
 
@@ -41,18 +40,35 @@ session.execute('USE ' + CASSANDRA_NAMESPACE)
 #bufferTime = 2
 #tableToDash = [['kills'], ['time']]
 
+xAxisImages = []
 
 heroListDict = [{'label': 'All Heroes', 'value': 0}]
 heroImageDict = {0:'https://cdn-images-1.medium.com/max/1191/0*vbw4wQW_Xq2_3eOo.jpg'}
+heroSmallImageDict = {}
 heroNameDict = {0: heroListDict[0]['label']}
 for hero  in heroDict.Names['heroes']:
     name = hero['localized_name']
     id = hero['id']
     heroListDict.append( {'label':hero['localized_name'], 'value': hero['id']})
     formatHeroName = hero['name']
-    heroImageDict[hero['id']]=  'http://cdn.dota2.com/apps/dota2/images/heroes/' + formatHeroName + '_full.png'  
     heroNameDict [hero['id']] = hero['localized_name'] 
-    
+    heroImageDict[hero['id']] = 'https://raw.githubusercontent.com/weihua-lu/dota2-images/gh-pages/heroes_lg/' + formatHeroName + '_lg.png'
+    heroSmallImageDict[hero['id']] = 'https://raw.githubusercontent.com/weihua-lu/dota2-images/gh-pages/heroes_sb/' + formatHeroName + '_sb.png'
+    xAxisImages.append({
+        'source': heroSmallImageDict[hero['id']],
+        'xref': 'x',
+        'yref': 'y',
+        'x': hero['id'],
+        'y': 0,
+        'sizex': 1,
+        'sizey': 2,
+        'xanchor': 'center',
+        'yanchor': 'top',
+        'layer': 'above',
+        'sizing': 'fill',
+        'opacity': 1,
+        'visible': True
+      })
 
 #Clear log for recording read times
 with open('outputReadTime.txt', 'w') as timelog:    
@@ -139,7 +155,9 @@ def plotBarGraph(cassandraCommand, windowSize, newestTime):
     listFromCas = []
 
     # Create the graph with subplots
-    fig = plotly.tools.make_subplots(rows=1, cols=1, vertical_spacing=0.2)
+    fig = plotly.tools.make_subplots(rows=1, cols=1, shared_xaxes = True, shared_yaxes=True)
+
+#    fig = go.Figure()
 
     for row in result:
         dictFromCas[row.victimhero] = row.kills
@@ -151,16 +169,19 @@ def plotBarGraph(cassandraCommand, windowSize, newestTime):
             fig.append_trace(go.Scatter(
                 x= xPoints,
                 y= yPoints,
-                mode = 'lines+markers'
-            ), 1, 1)
+                mode = 'lines+markers',
+         	line = {'width':50},
+	        marker = {'size':1}
+                ),1,1)
         else:
             xPoints = [i]
             yPoints = [0]
             fig.append_trace(go.Scatter(
                 x= xPoints,
                 y= yPoints,
-                mode = 'markers'
-             ), 1, 1)
+                mode = 'markers',
+                marker = {'size':1}
+                ),1,1) 
 
     print (tableToDash)
 
@@ -175,9 +196,12 @@ def plotBarGraph(cassandraCommand, windowSize, newestTime):
     fig['layout']['margin'] = {
         'l': 60, 'r': 60, 'b': 30, 't': 10
     }
-    fig['layout']['xaxis'] = {'title':'Victim Hero', 'ticks': 'outside', 'dtick':1, 'range':[0,112]}
-    fig['layout']['yaxis']= {'title':'Kill Rate (players/second)', 'range': [0,yAxisMax]}
-    fig['layout']['width'] = 6000
+    fig['layout']['xaxis'] = {'title':'Victim Hero', 'ticks': '', 'dtick':1, 'range':[0,111.5], 'showticklabels':False }
+    fig['layout']['yaxis']= {'title':'Kill Rate (players/second)', 'range': [-2,yAxisMax]}
+    fig['layout']['width'] = 12000
+    fig['layout']['showlegend'] = False
+#    fig['layout']['images'] = xAxisImages
+    fig['layout']['images'] = xAxisImages
     return fig
 
 def plotLineGraph(cassandraCommand, windowSize, newestTime):
