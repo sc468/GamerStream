@@ -62,24 +62,24 @@ def sendCassandra(iter):
  # split the batch, so that the batch will not exceed the size limit
         count += 1
         if count % 250 == 0:
-            startTime = time.time()
+#            startTime = time.time()
             session.execute(batch)
-            elapsedTime= time.time()-startTime
-            with open ('/home/ubuntu/outputWriteTime.txt','a+') as outputFile:
-                print ('250 counts')
+#            elapsedTime= time.time()-startTime
+#            with open ('/home/ubuntu/outputWriteTime.txt','a+') as outputFile:
+#                print ('250 counts')
                # outputFile.write(str(count))
                # outputFile.write(', ')
                # outputFile.write(str(elapsedTime))
                # outputFile.write('\n')
             batch = BatchStatement( batch_type=BatchType.COUNTER)
     # send the batch that is less than 500            
-    startTime = time.time()
+#    startTime = time.time()
 
     session.execute(batch)
 
-    elapsedTime= time.time()-startTime
-    with open ('/home/ubuntu/outputWriteTime.txt','a+') as outputFile:
-        print ('Sending batch')
+#    elapsedTime= time.time()-startTime
+#    with open ('/home/ubuntu/outputWriteTime.txt','a+') as outputFile:
+#        print ('Sending batch')
         #outputFile.write(str(count))
         #outputFile.write(', ')
         #outputFile.write(str(elapsedTime))
@@ -119,6 +119,20 @@ def main():
     # Transform player name into key
     prekiller = kafkaStream.map(lambda v:v[1][1:-2].split(','))\
 
+
+
+###################################################################
+# PARALLEL Map Reduce Job
+#    # Transform time into key, aggregate all kills
+#
+#    prekiller.cache()
+
+#    totalkills = prekiller.map(extractKiller2)\
+#                .map(lambda x: (x[1][0], (x[1][0], 0, 0, x[1][3])))\
+#                .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
+
+###########################################   
+
     killer = prekiller\
                 .map(extractKiller)\
                 .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
@@ -131,24 +145,20 @@ def main():
     totalkills = killer\
                 .map(lambda x: (x[1][0], (x[1][0], 0, 0, x[1][3])))\
                 .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
-###########################################   
-
-###################################################################
-# PARALLEL Map Reduce Job
-#    # Transform time into key, aggregate all kills
-#    totalkills = prekiller.map(extractKiller2)\
-#                .map(lambda x: (x[1][0], (x[1][0], 0, 0, x[1][3])))\
-#                .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
 
 ###########################################   
-    # Send data to cassandra    
-    totalkills.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))   
 
     # Send data to cassandra    
     killer.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))
-    #resultSimple_ds.foreachRDD(sendRethink)
+
+    # Send data to cassandra    
+    totalkills.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))   
+
+
+#    #!!! Unpersist killer for serial job, prekiller for parallel job
     killer.foreachRDD(lambda rdd: rdd.unpersist())
-    
+#    prekiller.foreachRDD(lambda rdd: rdd.unpersist())
+
     ssc.start()
     ssc.awaitTermination()
     return
