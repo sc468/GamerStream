@@ -21,4 +21,4 @@ session.execute('CREATE TABLE victimstats (time int, killerhero int, victimhero 
 #session.execute('CREATE TABLE deathstats (time int, victimhero int, kills counter, PRIMARY KEY (victimhero, time) )WITH CLUSTERING ORDER BY (time DESC);')
 #session.execute('CREATE TABLE killerstats (time int, killerhero int, victimhero int, kills int, PRIMARY KEY (killerhero, time, kills) )WITH CLUSTERING ORDER BY (time DESC, kills DESC);')
 #session.execute('CREATE TABLE data (time int, hero int, kills int, PRIMARY KEY (hero, time) )WITH CLUSTERING ORDER BY (time DESC);')
-
+session.shutdown()

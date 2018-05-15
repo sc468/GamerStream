@@ -31,7 +31,6 @@ from cassandra.query import BatchStatement
 from cassandra import ConsistencyLevel
 #from cassandra.cqlengine.query import BatchType
 from cassandra.query import BatchType
-import time
 
 # configuration file
 #import config
@@ -42,9 +41,11 @@ import time
 ###################################################
 
 def sendCassandra(iter):
+
+
     print("send to cassandra")
-#    cluster = Cluster(['54.214.213.178', '52.88.247.214', '54.190.18.13', '52.41.141.29'])
-    cluster = Cluster(['52.11.210.69', '50.112.90.110', '54.149.158.21'])
+#    cluster = Cluster(['52.11.210.69', '50.112.90.110', '54.149.158.21'])
+    cluster = Cluster(['35.155.143.117', '52.38.164.119', '54.189.249.67'])
     session = cluster.connect()
     session.execute('USE ' + "PlayerKills")
 
@@ -62,28 +63,10 @@ def sendCassandra(iter):
  # split the batch, so that the batch will not exceed the size limit
         count += 1
         if count % 250 == 0:
-#            startTime = time.time()
             session.execute(batch)
-#            elapsedTime= time.time()-startTime
-#            with open ('/home/ubuntu/outputWriteTime.txt','a+') as outputFile:
-#                print ('250 counts')
-               # outputFile.write(str(count))
-               # outputFile.write(', ')
-               # outputFile.write(str(elapsedTime))
-               # outputFile.write('\n')
             batch = BatchStatement( batch_type=BatchType.COUNTER)
-    # send the batch that is less than 500            
-#    startTime = time.time()
-
     session.execute(batch)
 
-#    elapsedTime= time.time()-startTime
-#    with open ('/home/ubuntu/outputWriteTime.txt','a+') as outputFile:
-#        print ('Sending batch')
-        #outputFile.write(str(count))
-        #outputFile.write(', ')
-        #outputFile.write(str(elapsedTime))
-        #outputFile.write('\n')
     session.shutdown()
 
 def extractKiller(v):
@@ -103,6 +86,13 @@ def extractKiller2(v):
 ###################################################
 ##                     Main                      ## 
 ###################################################
+
+def runExistingRDD (rdd):
+    if rdd.isEmpty():
+        return
+    else:
+        rdd.foreachPartition(sendCassandra)
+
 
 def main():
 
@@ -127,10 +117,10 @@ def main():
 #
 #    prekiller.cache()
 
-#    totalkills = prekiller.map(extractKiller2)\
-#                .map(lambda x: (x[1][0], (x[1][0], 0, 0, x[1][3])))\
-#                .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
-
+    totalkills = prekiller.map(extractKiller2)\
+                .map(lambda x: (x[1][0], (x[1][0], 0, 0, x[1][3])))\
+                .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
+#    totalkills.pprint()
 ###########################################   
 
     killer = prekiller\
@@ -141,22 +131,22 @@ def main():
 #SERIAL Map Reduce job
 #    # Transform time into key, aggregate all kills
 
-    killer.cache()
-    totalkills = killer\
-                .map(lambda x: (x[1][0], (x[1][0], 0, 0, x[1][3])))\
-                .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
+#    killer.cache()
+#    totalkills = killer\
+#                .map(lambda x: (x[1][0], (x[1][0], 0, 0, x[1][3])))\
+#                .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
 
 ###########################################   
 
     # Send data to cassandra    
-    killer.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))
+    killer.foreachRDD(lambda rdd:rdd.foreachPartition(sendCassandra) )
 
     # Send data to cassandra    
     totalkills.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))   
 
 
 #    #!!! Unpersist killer for serial job, prekiller for parallel job
-    killer.foreachRDD(lambda rdd: rdd.unpersist())
+#    killer.foreachRDD(lambda rdd: rdd.unpersist())
 #    prekiller.foreachRDD(lambda rdd: rdd.unpersist())
 
     ssc.start()
