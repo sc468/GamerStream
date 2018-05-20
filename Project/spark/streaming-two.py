@@ -106,7 +106,7 @@ def main():
     # create a direct stream from kafka without using receiver
 #    kafkaStream = KafkaUtils.createDirectStream(ssc, ['data'], {"metadata.broker.list":"localhost:9092"})
     kafkaStream = KafkaUtils.createDirectStream(ssc, ['data'], \
-    {"metadata.broker.list":"ec2-35-165-248-13.us-west-2.compute.amazonaws.com:9092"})
+    {"metadata.broker.list":"ec2-54-218-203-72.us-west-2.compute.amazonaws.com:9092"})
 
     # Transform player name into key
     prekiller = kafkaStream.map(lambda v:v[1][1:-2].split(','))\
