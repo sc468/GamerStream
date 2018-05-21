@@ -45,7 +45,7 @@ def sendCassandra(iter):
 
     print("send to cassandra")
 #    cluster = Cluster(['52.11.210.69', '50.112.90.110', '54.149.158.21'])
-    cluster = Cluster(['35.155.143.117', '52.38.164.119', '54.189.249.67'])
+    cluster = Cluster(['35.161.216.219', '52.89.131.97', '35.161.94.3'])
     session = cluster.connect()
     session.execute('USE ' + "PlayerKills")
 
@@ -123,9 +123,9 @@ def main():
 #    totalkills.pprint()
 ###########################################   
 
-    killer = prekiller\
-                .map(extractKiller)\
-                .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
+ #   killer = prekiller\
+ #               .map(extractKiller)\
+ #               .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
 
 ###################################################################
 #SERIAL Map Reduce job
@@ -139,7 +139,7 @@ def main():
 ###########################################   
 
     # Send data to cassandra    
-    killer.foreachRDD(lambda rdd:rdd.foreachPartition(sendCassandra) )
+#    killer.foreachRDD(lambda rdd:rdd.foreachPartition(sendCassandra) )
 
     # Send data to cassandra    
     totalkills.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))   

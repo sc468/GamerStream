@@ -45,7 +45,7 @@ def sendCassandra(iter):
 
     print("send to cassandra")
 #    cluster = Cluster(['35.155.143.117', '52.38.164.119', '54.189.249.67'])
-    cluster = Cluster(['35.155.143.117'])
+    cluster = Cluster(['35.161.216.219', '52.89.131.97', '35.161.94.3'])
     session = cluster.connect()
     session.execute('USE ' + "PlayerKills")
 
