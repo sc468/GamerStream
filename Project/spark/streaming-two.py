@@ -62,7 +62,7 @@ def sendCassandra(iter):
         batch.add(insert_statement2,(record[1][3], record[1][0], record[1][1], record[1][2]))
  # split the batch, so that the batch will not exceed the size limit
         count += 1
-        if count % 250 == 0:
+        if count % 10000 == 0:
             session.execute(batch)
             batch = BatchStatement( batch_type=BatchType.COUNTER)
     session.execute(batch)
@@ -142,7 +142,7 @@ def main():
 
     # Send data to cassandra    
     killer.foreachRDD(lambda rdd:rdd.foreachPartition(sendCassandra) )
-
+#    killer.pprint()
     # Send data to cassandra    
 #    totalkills.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))   
 
