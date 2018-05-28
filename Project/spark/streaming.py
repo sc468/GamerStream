@@ -1,5 +1,6 @@
 ############################################################
-# This python script is the main script for spark streaming. 
+# GOAL: Spark streaming python Scipt.
+# Submit to spark to run.
 #
 ############################################################
 
@@ -22,19 +23,12 @@ import json, math, datetime
 from kafka.consumer import SimpleConsumer
 
 from operator import add
-# rethinkDB
-#import rethinkdb as r
 
 # cassandra
 from cassandra.cluster import Cluster
 from cassandra.query import BatchStatement
 from cassandra import ConsistencyLevel
-#from cassandra.cqlengine.query import BatchType
 from cassandra.query import BatchType
-
-# configuration file
-#import config
-
 
 ###################################################
 ##                   Functions                   ## 
@@ -44,7 +38,6 @@ def sendCassandra(iter):
 
 
     print("send to cassandra")
-#    cluster = Cluster(['52.11.210.69', '50.112.90.110', '54.149.158.21'])
     cluster = Cluster(['35.161.216.219', '52.89.131.97', '35.161.94.3'])
     session = cluster.connect()
     session.execute('USE ' + "PlayerKills")
@@ -54,13 +47,12 @@ def sendCassandra(iter):
     count = 0
 
     # batch insert into cassandra database
-#    batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
     batch = BatchStatement( batch_type=BatchType.COUNTER)
     
     for record in iter:
         batch.add(insert_statement,(record[1][3], record[1][0], record[1][1], record[1][2]))
         batch.add(insert_statement2,(record[1][3], record[1][0], record[1][1], record[1][2]))
- # split the batch, so that the batch will not exceed the size limit
+    # split the batch, so that the batch will not exceed the size limit
         count += 1
         if count % 250 == 0:
             session.execute(batch)
@@ -100,10 +92,10 @@ def main():
     sc = SparkContext(appName="PythonSparkStreamingKafka_RM_01")
     sc.setLogLevel("WARN")
     
-    # set microbatch interval seconds
+    # Set microbatch interval seconds
     ssc = StreamingContext(sc, 2)
     
-    # create a direct stream from kafka without using receiver
+    # Create a direct stream from kafka without using receiver
     kafkaStream = KafkaUtils.createDirectStream(ssc, ['data'], {"metadata.broker.list":"localhost:9092"})
     
     # Transform player name into key
@@ -114,18 +106,10 @@ def main():
 ###################################################################
 # PARALLEL Map Reduce Job
 #    # Transform time into key, aggregate all kills
-#
-#    prekiller.cache()
-
     totalkills = prekiller.map(extractKiller2)\
                 .map(lambda x: (x[1][0], (x[1][0], 0, 0, x[1][3])))\
                 .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
 #    totalkills.pprint()
-###########################################   
-
- #   killer = prekiller\
- #               .map(extractKiller)\
- #               .reduceByKey(lambda x, y: (x[0], x[1], x[2], x[3]+y[3]) )
 
 ###################################################################
 #SERIAL Map Reduce job
@@ -139,15 +123,7 @@ def main():
 ###########################################   
 
     # Send data to cassandra    
-#    killer.foreachRDD(lambda rdd:rdd.foreachPartition(sendCassandra) )
-
-    # Send data to cassandra    
     totalkills.foreachRDD(lambda rdd: rdd.foreachPartition(sendCassandra))   
-
-
-#    #!!! Unpersist killer for serial job, prekiller for parallel job
-#    killer.foreachRDD(lambda rdd: rdd.unpersist())
-#    prekiller.foreachRDD(lambda rdd: rdd.unpersist())
 
     ssc.start()
     ssc.awaitTermination()

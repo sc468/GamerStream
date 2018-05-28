@@ -25,10 +25,8 @@ def main():
     count = 0
 
     prevTime =0 
-#    with open('SortedKillTimes.txt', 'r') as KillStream:
     with open(InputFile, 'r') as KillStream:
         for line in KillStream:
-            #print ('Printing line:', line)
             currentTime = int(line.split(',')[0][1:])
             if currentTime == prevTime:
                 producer.send('data', line.encode('utf-8'))

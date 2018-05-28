@@ -6,91 +6,76 @@ Names = {
             "name": "antimage",
             "id": 1,
             "localized_name": "Anti-Mage",
-	    "image":"https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/8/8e/Anti-Mage_icon.png?version=6282d66c4f28c9127ab53118beaa2543" 
         },
         {
             "name": "axe",
             "id": 2,
             "localized_name": "Axe",
-  	    "image":"https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/2/23/Axe_icon.png?version=2e5863c038d81ddef209c68b3e840d2c"
         },
         {
             "name": "bane",
             "id": 3,
             "localized_name": "Bane",
-            "image":"https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/c/c3/Bane_icon.png?version=04e7a3716b6bdb461db5d4c5b37bb62c"
         },
         {
             "name": "bloodseeker",
             "id": 4,
             "localized_name": "Bloodseeker",
-	    "image":"https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/5/56/Bloodseeker_icon.png?version=ea1fd42b8d16c660ce428145927bda0d"
         },
         {
             "name": "crystal_maiden",
             "id": 5,
             "localized_name": "Crystal Maiden",
-   	    "image": "https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/2/27/Crystal_Maiden_icon.png?version=976ba433b43cbcbd8d1fabf598e48ecd"
         },
         {
             "name": "drow_ranger",
             "id": 6,
             "localized_name": "Drow Ranger",
-	    "image": "https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/8/80/Drow_Ranger_icon.png?version=6f8a1b425082f4135bbd616c38d8eee6"
         },
         {
             "name": "earthshaker",
             "id": 7,
             "localized_name": "Earthshaker",
-   	    "image": "https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/a/a5/Earthshaker_icon.png?version=6cf8407fb142a4e59398690be1132274"
         },
         {
             "name": "juggernaut",
             "id": 8,
             "localized_name": "Juggernaut",
-	    "image": "https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/0/03/Juggernaut_icon.png?version=99b0ef7bad0a95b1a29110f536607f9e"
         },
         {
             "name": "mirana",
             "id": 9,
             "localized_name": "Mirana",
-	    "image":"https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/1/12/Mirana_icon.png?version=724a414128313d30bbf81ba22ed33741"
         },
         {
             "name": "nevermore",
             "id": 11,
             "localized_name": "Shadow Fiend",
-	    "image": "https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/3/36/Shadow_Fiend_icon.png?version=ca3e0093887116c08f929aa99700ae4d"
         },
         {
             "name": "morphling",
             "id": 10,
             "localized_name": "Morphling",
-	    "image": "https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/7/7b/Morphling_icon.png?version=e3fb6a35e9420dff83b5bcf3015a816c"
         },
         {
             "name": "phantom_lancer",
             "id": 12,
             "localized_name": "Phantom Lancer",
-	    "image": "https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/8/81/Phantom_Lancer_icon.png?version=73abb11aba2c7eb7c6fdef814aefa15b"
         },
         {
             "name": "puck",
             "id": 13,
             "localized_name": "Puck",
-	    "image":"https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/1/13/Puck_icon.png?version=5d87685f13984ed6aeb8b38aca9c4c64"
         },
         {
             "name": "pudge",
             "id": 14,
             "localized_name": "Pudge",
-	    "image": "https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/c/c0/Pudge_icon.png?version=77fd45e79a036f56eac49d7312c2dd80"
         },
         {
             "name": "razor",
             "id": 15,
             "localized_name": "Razor",
-	    "image": "https://d1u5p3l4wpay3k.cloudfront.net/dota2_gamepedia/6/66/Razor_icon.png?version=ab625205ccf3d62edb9431a1426b7f47"
         },
         {
             "name": "sand_king",

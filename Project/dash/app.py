@@ -18,13 +18,13 @@ import plotly.graph_objs as go
 #######################################################
 # This script is for reading from  a table in cassandra #
 #######################################################
+print ('Website:')
 print ('ec2-35-155-176-164.us-west-2.compute.amazonaws.com')
 
 from cassandra.cluster import Cluster
 
 CASSANDRA_NAMESPACE = 'PlayerKills'
 
-#cluster = Cluster(['54.214.213.178', '52.88.247.214', '54.190.18.13', '52.41.141.29'])  #config.CASSANDRA
 cluster = Cluster(['52.11.210.69', '50.112.90.110', '54.149.158.21'])
 session = cluster.connect()
 
@@ -33,12 +33,6 @@ session.execute('USE ' + CASSANDRA_NAMESPACE)
 #######################################################
 # Setup Website with Dash #
 #######################################################
-
-#streamStarted = False
-#windowSize = 20
-#windowStart = 0
-#bufferTime = 2
-#tableToDash = [['kills'], ['time']]
 
 xAxisImages = []
 
@@ -69,10 +63,6 @@ for hero  in heroDict.Names['heroes']:
         'opacity': 1,
         'visible': True
       })
-
-#Clear log for recording read times
-with open('outputReadTime.txt', 'w') as timelog:    
-    timelog.write('Read Time (s)\n')
 
 app = dash.Dash()
 
@@ -116,8 +106,10 @@ app.layout = html.Div([
         html.H2(id = 'side-hero-label', style = {'text-align': 'center', 'margin-top':2})
     ], style = {'float':'left', 'width': '30%'}),
 
+#Live update graph
     dcc.Graph(id='live-update-graph', animate = True, style = {'width':'69%','display': 'inline-block', 'float': 'left'}), 
 
+#Refresh graph periodically
     dcc.Interval(
         id='interval-component',
         interval=2000, # in milliseconds
@@ -156,8 +148,6 @@ def plotBarGraph(cassandraCommand, windowSize, newestTime):
 
     # Create the graph with subplots
     fig = plotly.tools.make_subplots(rows=1, cols=1, shared_xaxes = True, shared_yaxes=True)
-
-#    fig = go.Figure()
 
     for row in result:
         dictFromCas[row.victimhero] = row.kills
@@ -200,7 +190,6 @@ def plotBarGraph(cassandraCommand, windowSize, newestTime):
     fig['layout']['yaxis']= {'title':'Kill Rate (players/second)', 'range': [-2,yAxisMax]}
     fig['layout']['width'] = 12000
     fig['layout']['showlegend'] = False
-#    fig['layout']['images'] = xAxisImages
     fig['layout']['images'] = xAxisImages
     return fig
 
@@ -255,12 +244,11 @@ def plotLineGraph(cassandraCommand, windowSize, newestTime):
     return fig
 
 
-# Multiple components can update everytime interval gets fired.
+# Update graph at intervals AND when drop down or radio buttons change
 @app.callback(Output('live-update-graph', 'figure'),
               [ Input('interval-component', 'n_intervals') ],
             [State('my-dropdown', 'value'), State('my-buttons', 'value')])
 def update_graph_live( n, heroNum,buttonState):
-    #Grab max time
     cassandraCommand = 'SELECT time  FROM killerstats LIMIT 1' 
     newestTime = session.execute(cassandraCommand)
     try:

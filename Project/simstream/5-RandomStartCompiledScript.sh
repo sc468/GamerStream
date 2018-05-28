@@ -1,5 +1,8 @@
 #!/bin/sh
 
+#GOAL: Take historical match data and extract stream of kille events
+#A random time offset is added to each player. This is to simualte players starting at different times.
+
 NUMPLAYERS=2000001
 echo $NUMPLAYERS
 

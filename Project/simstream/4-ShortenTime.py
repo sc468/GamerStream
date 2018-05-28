@@ -1,3 +1,5 @@
+#GOAL: Limit kill stream to 5 minutes for testing purposes
+
 #HOW TO USE IN COMMAND LINE: 
 #python3 2-ExtractKillStream.py  <Input File Name, should start with 4>
 
